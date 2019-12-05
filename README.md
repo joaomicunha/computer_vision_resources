@@ -1,6 +1,6 @@
 # **Computer Vision**
 
-This repo documents my journey from being a Data Scientist with basic knowledge of image data and cv techniques, to hopefully build up more expertise. 
+This repo documents my journey from being a Data Scientist with basic knowledge of image data and cv techniques, to hopefully build up more expertise. I have some experience with images related projects and have studied Deep Learning through courses and literature over the last year and a half.
 
 On the 2nd of December 2019 I started this learning process. The progress will be:
 
@@ -9,7 +9,9 @@ On the 2nd of December 2019 I started this learning process. The progress will b
 - Find a away to explore recent literature on the field and improve on the habit of reading more papers.
 - Implement an object detection framework to detect/localise interesting information on Bulb's bills/documents. 
 
-## Notes on Andrew's Ng Convolutional Neural Networks chapter:
+## Super summarised notes on Andrew's Ng Convolutional Neural Networks chapter:
+
+**Week 1: Overview**
 
 - Convolve a n x n image with a f x f filter (often called kernel) and the result is a f-n+1 by f-n+1 image. We get the resulted matrix by doing the element-wise product sliding the filter.
 - Convolution filters are useful to detect abstractions on images (edges for instance).
@@ -19,6 +21,22 @@ On the 2nd of December 2019 I started this learning process. The progress will b
 - The content of the filter is normally treated as hyperparameters of the network and tuned during training. 
 - Strided convolutions move by s pixels (instead of 1).
 - floor((n + 2p - f)/s) + 1) is the final shape of a 1D matrix convolved by a f x f filter with padding p and stride s.
+- Cross-correlation in traditional math books will rotate the kernel matrix first but in deep-learning is called convolution and it doesn't rotate.
+- For RGB images, we convolve over volume with filters of f x f x n_channels and the number of channels in the image should match the number of channels in the filter.  a 6x6x3 image convolved with a 3x3x3 filter still returns a 2D matrix of 4x4 because we multiply and sum all the pixels of the filter with the section of the image. 
+- We can convolve the same image simultaneously by 2 filters (example 3x3x3 and 3x3x3). This will return a 4x4x2 matrix (where 2 is the number of filters). 
+- A great thing about convolutional layers is that the size and number of the filters is agnostic of the size of the input. This makes the process quite scalable and is less prone to overfitting, as the number of parameters is kept relatively small. so a conv layer with 4 3x3x3 parameters will have 27 + 1 (bias) * 4 parameters.
+- Conv nets use also Pooling layers (together with convolutional layers).
+- In Pooling we also have stride and filter size and based on that, we take an operation in a region. MaxPooling will take tthe max value on the fxf region. 
+- The intuition is that the MaxPooling will preserve a relevant feature from in a filter region. 
+- Pooling doesn't have parameters to learn (weights) only hyperparameters stride and filter shape f. 
+- In volume (for RGB images) the pooling operation is made independent of channel. So the output will be as deep as the input. 
+- Another less popular pooling operation is AveragePooling.
+- Output of a Pooling layer is given by the same formula as the output of a convolutional layer (without p as pooling normally doesn't use pooling).
+- Conv layers are followed by Pooling normally.
+- As we go deeper in a CNN, nH and nW tend to decrease and nC (channels/volume) tend to increase.
+- Convolutions are useful due to 'parameter sharing' (vertical edges can be useful in different places of the image) and 'sparsity of connections' (each output pixel is only dependent on a small number of pixels).
+
+**Week 2: Overview**
 
 
 ## Cool articles and resources:
