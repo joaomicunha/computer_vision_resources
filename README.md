@@ -38,8 +38,6 @@ On the 2nd of December 2019 I started this learning process. The progress will b
 
 **Week 2: Overview**
 
-Papers: 
-
 - In this week we explore common architectures etc. 
 - Potential for transferring useful architectures is huge in computer vision.
 - LeNet-5, AlexNet and VGG are classic CNNs. ResNet (152 layer NN). Inception NN.
@@ -47,7 +45,47 @@ Papers:
 - AlexNet (2012). Much bigger than LeNet (60M parameters) but similar architecture. This paper added ReLu and an innovative idea around training in two GPUs. This paper also introduced the idea of Local Response Normalisation (LRN) which is not super popular this days. Given an input block, it aims at normalising on the channel inputs. 
 - VGG-16 (just conv layers with 3x3 filters with stride 1 and MaxPool layers with 2x2 filters and stride of 2). Large network 138M parameters but appealing simple architecture. There is also VGG-19 a larger version.
 - ResNets (2015) are made of Residual blocks. A residual block uses shortcuts (or skip connections) to pass information deeper in NN. This allows to train much deeper networks (faster?). Empirically we see that for traditional plain networks the training error plateous after some layers being added, but with ResNet this doesn't happen.
+- Adding ResNet block should not heart performance because we are adding the output of previous layers.
+- ResNet assumes that when we add previous outtputs the dimensions are the same. That is why we add conv layers with same output shape (He et al. 2015 Deep residual networks for image recognition).
+- 1 by 1 convolutions are interesting. Also called Network in Network. This is very useful to shrink the number of channels in the output. For example if we have an input of 28x28x192 and want to get the channels to 28 we can convolve with a 1x1x28 filter. On top of this advantage, 1x1 convolutions add non-linearities allowing us to map more complex functions. 
+
+- Inception Networks. The idea is to apply multiple operations (pooling, conv, 1x1 convs) in the same layers and stack the output before being parsed to the next output. This allows us to say start with a 28x28x192 input and go tot 28x28x256.
+- We stack the multiple outputs of the same layer by channel (concat by channel).
+- The problem of Inception Networks is the computation cost.
+- Inception Network has intermediary softmax outputs to make sure that features being computed during the process are relevant too.
+- googleLeNet is the name of the network trained on the Going Deeper with Convolutions 2014 paper.
+- DONT UNDERSTAND HOW DO WE GET SAME width and depth outputs by convolving with small filters.
+
+- Transfer Learning is what we need almost always!
+- Different deep learning frameworks allow us to do transfer learning with trainbaleParameter = 0 or freeze = 1
+- A good trick is to pre-compute the frozen layers for all the examples in the training set and save those weights to disk. Then all we have to do is train a network on the feed-forward layers feeding the frozen weights as input.
+- The idea is that the more training data we have the less layers we have to freeze from previously trained models.
+- We can initialise our application with the downloaded weights and then train for a certain number of epochs.
+
+- Data augmentation is a core idea to expand image datasets (often hard to label). The core idea is that transformations that are invariant to the thing we are trying to classify, should be considered. 
+- Shearing, mirroring, random cropping, local wraping are examples.
+- Color shifting is also commonly used (adding, subtracting to the RGB pixels). 
+
+- Andrew Ng describes two sources of knowledge in an ML problem (labeled data and hand engeneering,model features, hacks etc). Due to how difficult is to get labellled data for computeer vision tasks, means the field has been evolving more on the later. 
+
+- Multi-Crop at test time means for each test image with crop n different instances of the image and run predictions on each crop. The final prediction is then the average of the n cropped predictions. This is costly and so not super popular in production systems. 
+
+**Week 3: Detection Algorithms**
+
+- Sliding window detection we slide a fixed size window throguh the entire image covering all possible pixels. This is computationally expensive. There is ways to implemet this algorithm convolutional way without having to run it n times for each sliding window.
+- This is done by transforming FC layers to CONV layers by applying n conv of size of the previous output.
+- YOLO - You Only Look Once algo. Split the image into n equal section grid. And for each grid, prepare a label of lengh 8 including pC (probability of including object), bXm bY, bH, bW (bounding box if grid contains object), and 3 flags for each object being detected. The label is then n x n x 8 (for 3 classes). We then use back-propagation to map the image x to the output n x n x 8. This allows us to detect multiple objects in different locations in the same image with one network with convolution layers. 
+- YOLO is also computationally attractive and suitable for live video streaming.
+- In YOLO, bXm bY, bH, bW are specified relative to the grid cell. 
+- 19 x 19 is classic grid size
+
+- IoU (intersection of union) is used to evaluate how well the localisation of the bounding box is done. If the prediction is perfect the IoU is 1, and normally the threshold used is 0.5 to counting how many times the object is correctly localised.
+- Non-max supression simply outputs the predicted bounding-box with higher IoU against the labelled/actual bounding-box (and drop the remaining ones). For each grid slot, two anchor boxes are predicted (some with really low pC)/
+- Anchor-boxes is this idea of including multiple labels/bounding-boxes for the same grid. So a NN trained on this framework would be trained agains a n x n (number of grids) x 8 (5 + number of classes) x 2 (2 anchor boxes). 
+
+- Scanning algortihms are a set of object detection methods. Region Proposed (R-CNN) is another. This methods identify segmented reagions and then classifies each region (outputing the label and bounding box for each region).
 
 ## Cool articles and resources:
 
 https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_convolutional_neuralnetwork/
+https://www.analyticsvidhya.com/blog/2018/10/understanding-inception-network-from-scratch/
