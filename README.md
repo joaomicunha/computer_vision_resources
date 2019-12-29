@@ -84,6 +84,147 @@ On the 2nd of December 2019 I started this learning process. The progress will b
 - Anchor-boxes is this idea of including multiple labels/bounding-boxes for the same grid. So a NN trained on this framework would be trained agains a n x n (number of grids) x 8 (5 + number of classes) x 2 (2 anchor boxes). 
 
 - Scanning algortihms are a set of object detection methods. Region Proposed (R-CNN) is another. This methods identify segmented reagions and then classifies each region (outputing the label and bounding box for each region).
+- The problem is that is quite slow to run. Fast R-CNN and Faster R-CNN are newer implementations using convolution layers to acelarate the training.
+
+**Week 4 **
+
+
+
+
+** Pytorch for Computer Vision Course (Udacity) **
+
+Day 1 Notes: 
+
+- torch.FloatTensor -> to create a tensor float
+- torch.tensor -> to create a general tensor
+- tensor.view(rows,cols) -> to reshape a tensor
+- tensor.view(rows, -1) -> reshapes the tensor to rows number of rows and infers the necessary number of colums to be able to match. for instance if we have a length 6 1d tensor we can shape to 3 rows and 2 columns as 3 x 2 is 6. We can achieve this by tensor.view(3,2) or tensor.view(3,-1)
+- torch.from_numpy(a_numpy_array) -> to convert numpy array to tensor
+- torch.dot(tensor1, tensor2) -> dot product
+- torch.linspace(0,10,5) -> useful to plot a function where the function can be a function of this. 
+- greyscale images are 2D matrixes with values from 1 (black) to 255 (white)
+- a_tensor.dim() -> number of dimensions i.e. 2 for 2D matrix
+- torch.arrange(18).view(3,3,2) -> generates a tensor with 18 values and shape 3 (rows), 3 (columns) and 2 (channels).
+- torch.matmul(tensor1, tensor2) -> obviously only 2 matrixes where the columns of the first and the rows of the second are the same, can be multiplied.
+- torch.tensor(2.0m requires_grad = True) -> to define a tensor that requires a derivative to be done.
+- For instance if we have a function y = x**2 + z**3 and want to compute the partial derivatives of x and z respectively, we would create to x and z tensors (e.g. x = torch.tensor(1.0, requires_grad=True)) and then call y.backward() (to compute the derivatives). We can access these by x.grad or z.grad.
+
+Day 2 Notes: 
+
+- We need to define a forward() function to be able to compute the output of a function given a set of inputs.
+- To predict one  output we do forward(torch.tensor([2])) to predict multiple we do forward(torch.tensor([[2],  [7]]))
+- from torch.nn import Linear  -> model = Linear(in_features = 1, out_features=1) instanciates a Linear model with 1 set of inputs and ouputs (one model.bias one model.weight).
+- nn.Linear() -> initiates random weights
+- torch.manual_seed(1)  -> set seed
+- we can also build custom Models class -> traditionally PyTorch custom classes inherit from nn.Module (import torch.nn as nn). We can start any custom PyTorch model by using:
+
+```python
+class LR(nn.Module):
+  def __init__(self, input_size, output_size):
+    super().__init__()
+    self.linear = nn.Linear(input_size, output_size)
+  def forward(self, x):
+    pred = self.linear(x)
+    return(pred)
+```
+
+- if we instante this class model = LR(1,1) we can get our params as model.parameters().
+- subtract the derivative of the partial derivative on the point to move  towards the minima as the partial derivative of a point points up. this is gradient descent where we update w1 = w0 - learn_rate * derivative_of_loss_function_to_x.
+- nn.MSELoss() defines a choise for loss function
+- we need to pick an optimizer too. torch.optim.SGD(model.paramters(), lr = 0.01) -> stochastic gradient descent is the same concept of gradient descent but for the latter we optimise for all the samples simultaneously which makes the process slow. 
+- we train our model for a certain number of epochs - > an epoch is the number of times we pass the dataset back and forth trough the model.
+- tensor.item() converts the tensor to a number.
+- We then iterate through each epoch:
+
+
+```python
+criterion = nn.MSELoss()
+optimiser = torch.optim.SGD(model.paramters(), lr = 0.01)
+losses = []
+epochs = 100
+model = Model()
+
+for i in range(epochs):
+    #for each epoch
+    #feed x through the model and compute the first vector of predictions
+    y_pred = model.forward(x)
+    #calculate the loss
+    loss = criterion(y_pred, y)
+    print("epoch: {} Loss: {}".format(str(i), loss.item()))
+    #Store the loss values
+    losses.append(loss)
+    #Since the gradients acucmulate, we have to always set it to zero
+    optimiser.zero_grad()
+    #compute the partial derivatives
+    loss.backward()
+    #update the parameters
+    optimiser.step()
+```
+
+Day 3 Notes:
+
+- Create a Pytorch Dataset - pytorch has access to multiple pre loaded dataset.
+- Cross-entropy - because classification models predict probabilities, we can take the sumation of the log of each probability. we want to minimise the cross-entropy (nn.BCELoss()).
+- For classification, we pass the forward output to a sigmoid function:
+
+```python
+class Model(nn.Module):
+  def __init__(self, input_size, output_size):
+    super().__init__()
+    self.linear = nn.Linear(input_size, output_size)
+  def forward(self, x):
+    pred = torch.sigmoid(self.linear(x))
+    return(pred)
+
+#Instantiate:
+model = Model(2,1)
+```
+
+Day 4 Notes:
+
+- For deep NN we can create a new base class that supports a number of hiden layers in the init method.
+
+```python
+class Model(nn.Module):
+  def __init__(self, input_size, H1, output_size):
+    super().__init__()
+    self.linear = nn.Linear(input_size, H1)
+    self.linear2 = nn.Linear(H1, output_size)
+  def forward(self, x):
+    x = torch.sigmoid(self.linear(x))
+    x = torch.sigmoid(self.linear2(x))
+
+    return(x)
+```
+
+
+- AdamOptimiser - adapting learning algorithms. combines rmsprop and adagrad. it covers the limitation of SGD which is the need to pick a learning rate. Adam picks learning rates for each weight. 
+
+Day 5 Notes:
+
+-  we install both torch and torchvision (this package contains transformations and commonly used datasets).
+- Often we compose transformers to be applied when we download the data. Multiple sequential transformers can be applied. The normalize() one aimss to center the pixel features to 0.5 mean and 0.5 standard deviation.
+- The data-loader defines how we will feed the data to the network for training. In the case below we will use batches of size 100 using shuffling. 
+
+```python
+transform = transforms.Compose([transforms.ToTensor(), 
+                                transforms.Normalize((0.5, ), (0.5, ))])
+
+train_data = datasets.MNIST(root = "./data", train=True, download=True, transform=transform)
+
+training_loader = torch.utils.data.DataLoader(dataset = training_dataset, batch_size=100, shuffle=True)
+```
+
+- Function to convert transformed tensor to both numpy array for plotting (transpose to go to h,w, c and invert the normalisation and clipping)
+
+```python
+def im_convert(tensor):
+  image = tensor.clone().detach().numpy()
+  image = image.transpose(1,2,0)
+  image = image*np.array((0.5, 0.5, 0.5)) + image*np.array((0.5, 0.5, 0.5))
+  image = image.clip(0, 1)
+  return(image)
+```
 
 ## Cool articles and resources:
 
