@@ -226,6 +226,34 @@ def im_convert(tensor):
   return(image)
 ```
 
+- nn.CrossEntropyLoss() (combinartion of LogSoftmax() and NLLLoss()) is generaly used for multiclass classification as a cost function. Very interesting that we don't apply an activation function in the final linear layer and just output the raw final output (with no softmax).
+
+```python
+class Classifier(nn.Module):
+    
+    def __init__(self, D_in, H1, H2, D_out):
+        super().__init__()
+        self.linear1 = nn.Linear(D_in, H1)
+        self.linear2 = nn.Linear(H1, H2)
+        self.linear3 = nn.Linear(H2, D_out)
+    def forward(self, x):
+        x = F.relu(self.linear1(x))  
+        x = F.relu(self.linear2(x))
+        x = self.linear3(x)
+        return x
+```
+
+- to train with epoch and batches, we need to feed each batch n epoch times.
+
+```python 
+epochs = 12
+running_loss_history = []
+
+for e in range(epochs):
+    for inputs, labels in training_loader:
+        inputs = inputs.view(784, -1)
+
+```
 ## Cool articles and resources:
 
 https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_convolutional_neuralnetwork/
