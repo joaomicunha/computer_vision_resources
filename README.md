@@ -204,11 +204,13 @@ Day 5 Notes:
 
 -  we install both torch and torchvision (this package contains transformations and commonly used datasets).
 - Often we compose transformers to be applied when we download the data. Multiple sequential transformers can be applied. The normalize() one aimss to center the pixel features to 0.5 mean and 0.5 standard deviation.
-- The data-loader defines how we will feed the data to the network for training. In the case below we will use batches of size 100 using shuffling. 
+- The DataLoader defines how we will feed the data to the network for training. In the case below we will use batches of size 100 using shuffling. 
 
 ```python
-transform = transforms.Compose([transforms.ToTensor(), 
+transform = transforms.Compose([transforms.Resize((28,28)), 
+                                transforms.ToTensor(), 
                                 transforms.Normalize((0.5, ), (0.5, ))])
+
 
 train_data = datasets.MNIST(root = "./data", train=True, download=True, transform=transform)
 
@@ -221,6 +223,7 @@ training_loader = torch.utils.data.DataLoader(dataset = training_dataset, batch_
 def im_convert(tensor):
   image = tensor.clone().detach().numpy()
   image = image.transpose(1,2,0)
+  #inverts the normalisation (x - mean)/std.var
   image = image*np.array((0.5, 0.5, 0.5)) + image*np.array((0.5, 0.5, 0.5))
   image = image.clip(0, 1)
   return(image)
@@ -229,6 +232,9 @@ def im_convert(tensor):
 - nn.CrossEntropyLoss() (combinartion of LogSoftmax() and NLLLoss()) is generaly used for multiclass classification as a cost function. Very interesting that we don't apply an activation function in the final linear layer and just output the raw final output (with no softmax).
 
 ```python
+from torch import nn
+import torch
+
 class Classifier(nn.Module):
     
     def __init__(self, D_in, H1, H2, D_out):
@@ -241,6 +247,12 @@ class Classifier(nn.Module):
         x = F.relu(self.linear2(x))
         x = self.linear3(x)
         return x
+
+model = Classifier(784, 125, 65, 10)
+criterion = nn.CrossEntropyLoss()
+#sometimes need to tune this learning rate:
+optimizer = torch.optim.Adam(model.parameters(). lr = 0.01)
+
 ```
 
 - to train with epoch and batches, we need to feed each batch n epoch times.
@@ -250,10 +262,33 @@ epochs = 12
 running_loss_history = []
 
 for e in range(epochs):
+    running_loss = 0.0
+    running_corrects = 0.0
     for inputs, labels in training_loader:
-        inputs = inputs.view(784, -1)
+      #flat the input images:
+      inputs = inputs.view(784, -1)
+      outputs = model.forward(inputs)
+      loss = criterion(outputs, label)
+      optimizer.zero_grad()
+      loss.backward()
+      optimizer.step()
 
+      #torch.max() gives the index of the top n max values in the tensor.
+      _, preds = torch.max(outputs, 1)
+      #compare predictions with labels from the loader:
+      running_corrects += torch.sum(preds == labels.data)
+      running_loss += loss.item()
+
+    epoch_loss = running_loss/len(train_loader)
+    epoch_acc = running_corrects.float()/len(training_loader)
+    running_loss_history.append(epoch_loss)
 ```
+
+- to estimate validatin performance we run with with torch.no_grad() to optimise memory as we are only doing inference and don't need the derivatives.
+
+day 6 notes:
+
+
 ## Cool articles and resources:
 
 https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_convolutional_neuralnetwork/
