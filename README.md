@@ -7,7 +7,6 @@ On the 2nd of December 2019 I started this learning process. The progress will b
 - Quickly review Andrew's Ng Convolutional Neural Networks chapter to put my self in the right mindset and vocabulary space. 
 - Complete PyTorch course (ideally with Computer Vision orientation). During the PyData Conference in London 2019, I had the opportunity to attend multiple presentations using PyTorch and found the framework very intuitive. This helped me decide to learn PyTorch as my main Deep Learning framework. 
 - Find a away to explore recent literature on the field and improve on the habit of reading more papers.
-- Implement an object detection framework to detect/localise interesting information on Bulb's bills/documents. 
 
 ## Super summarised notes on Andrew's Ng Convolutional Neural Networks chapter:
 
@@ -284,9 +283,57 @@ for e in range(epochs):
     running_loss_history.append(epoch_loss)
 ```
 
-- to estimate validatin performance we run with with torch.no_grad() to optimise memory as we are only doing inference and don't need the derivatives.
+- to estimate validation performance we run with with torch.no_grad() to optimise memory as we are only doing inference and don't need the derivatives.
 
-day 6 notes:
+Day 6 notes:
+
+- convolutions solve the computanional problem of using FF NN for image classification as some images are high dimentional (72x72 rgb images is 15552 pixels which means we would have to use 15552 nodes in the first hidden layer).
+- convolutions combined with pooling layers are great to combat overfitting. 
+- receptive field is the area where the conv kernel performs and a feature map is the output of a series of convolution layers including image features.
+- The author of the course suggest Relu activation function is more biologically sound as other activation functions as neurons activate at a minimum value oof zero. ReLu is also more robust to vanishing gradient problem. 
+- the filter's output is a measure of similarity of the feature in the filter and the same feature in the image.
+- pooling layers aree designed to reduce the complexity of the model keeping the essential features. This reduces the computational cost and the risk of overfitting. Most importantly, it's scale invariant!
+- as we go deeped in the conv network, we start encoding specific abstract features. 
+- fully connected layers are solely responsible for classification task whilst the conv and pooling layers will extract features. 
+
+- we can use a similar code structure to implement a convolutional network.
+- The first value of nn.Conv2d is the number of channels of the input (1 for greyscale) and the second is the number of filters.
+
+- In google colab we can add GPUs in Runtime. To use Cuda GPUs we need to send the model and the inputs to the gpu using device inputs = inputs.to(device) where device is specified before. this has to be done to all inputs and labels and models to be used in the training process (training and val sets).
+
+- we can use dropout layer to reduce overfitting. See below.
+```python
+from torch import nn
+import torch
+
+class LeNet(nn.Module):
+    
+    def __init__(self, D_in, H1, H2, D_out):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 20, 5, 1)
+        self.conv2 = nn.Conv2d(20, 50, 5, 1)
+        self.fc1 = nn.Linear(4*4*50, 500)
+        self.fc2 = nn.Linear(500, 10)
+
+    def forward(self, x):
+        x = F.relu(self.conv1(x)) 
+        #2 by 2 max pooling kernel
+        x = F.max_pool_2d(x, 2, 2) 
+        x = F.relu(self.conv2(x)) 
+        x = F.max_pool_2d(x, 2, 2) 
+        x = x.view(-1, 4*4*50)
+        x = F.relu(self.fc1(x))
+        x = self.fc2(x)
+
+        return x
+
+model = LeNet(784, 125, 65, 10)
+criterion = nn.CrossEntropyLoss()
+#sometimes need to tune this learning rate:
+optimizer = torch.optim.Adam(model.parameters(). lr = 0.01)
+
+```
+
 
 
 ## Cool articles and resources:
