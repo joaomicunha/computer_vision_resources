@@ -301,7 +301,10 @@ Day 6 notes:
 
 - In google colab we can add GPUs in Runtime. To use Cuda GPUs we need to send the model and the inputs to the gpu using device inputs = inputs.to(device) where device is specified before. this has to be done to all inputs and labels and models to be used in the training process (training and val sets).
 
-- we can use dropout layer to reduce overfitting. See below.
+- we can use dropout layer to reduce overfitting. it's very usefull to build more general models as it forces some nodes to be optimised as some random nodes are droped during the update process. this only happens during training. to run predictions, all the nodes are used. 
+
+- Typically we use dropout layers between layers with many parameters as these are the ones more prone to overfitting. Between the 2 fully connected layers for instance. 
+
 ```python
 from torch import nn
 import torch
@@ -313,6 +316,7 @@ class LeNet(nn.Module):
         self.conv1 = nn.Conv2d(1, 20, 5, 1)
         self.conv2 = nn.Conv2d(20, 50, 5, 1)
         self.fc1 = nn.Linear(4*4*50, 500)
+        self.dropout1 = nn.Dropout(0.5)
         self.fc2 = nn.Linear(500, 10)
 
     def forward(self, x):
@@ -321,8 +325,10 @@ class LeNet(nn.Module):
         x = F.max_pool_2d(x, 2, 2) 
         x = F.relu(self.conv2(x)) 
         x = F.max_pool_2d(x, 2, 2) 
+        # 4*4*50 is means after the conv/pooling layers we will end up with 4 by 4 tensor with 50 channels which we flat to a 1d tensor of length 800.
         x = x.view(-1, 4*4*50)
         x = F.relu(self.fc1(x))
+        x = self.dropout1(x)
         x = self.fc2(x)
 
         return x
@@ -334,9 +340,62 @@ optimizer = torch.optim.Adam(model.parameters(). lr = 0.01)
 
 ```
 
+Day 7:
 
+- Hyperparameter tuning is a useful way to optimise the model. 
+- We can optimise the learning learning rate if for instance the model is converging very slowly.
+- more conv layers (doubling the number of channels in the preceding layer 16 to 32 to 64) to be able to extract more and better features. 
+- for overfitting, another option is to use smaller kernel/filter sizes.
+- Data augmentation is a key useful way to generate more generable training data. We can use transforms class from Pytorch to apply augmentation. We define a transform_train just for training set (below) as we don't augment validation sets.
+
+```python
+
+transform_train = transforms.Compose([transforms.Resize((32,32)),
+                                      transforms.RandomHorizontalFlip(),
+                                      transforms.RandomRotation(10),
+                                      transforms.RandomAffine(0, shear=10, scale=(0.8,1.2)),
+                                      transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2),
+                                      transforms.ToTensor(),
+                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                               ])
+
+
+transform = transforms.Compose([transforms.Resize((32,32)),
+                               transforms.ToTensor(),
+                               transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                               ])
+```
+
+Day 8:
+
+- Transfer learning in Pytorch. Transfer learning should be used when we have not enough labelled data or when effective pre-trained models already exist. 
+- AlexNet and VGG16 and others are available in torchvision library.
+- conv and pooling layers are feature extractors whilst the FC layers are classifiers. A normal approach for transfer learning is to freeze the parameters of the conv + pooling layers and train the network on your dataset from the FC layer. Sometimes the final layer of pre-trained models have more outputs than we need for our case (e.g 1000 softmax), so often we need to add an extra layer that ouputs the number of classes we need.
+- we need to pay attention to the expected input size of the pre-trained Nets and reshape our imnput images to match that.
+
+- The code below loads the entire AlexNet including the FC layers. We need to freeze the feature extraction conv layer parameters and train the FC layer only.
+
+```python
+model = models.alexnet(pretrained=True)
+#important to note that 'features' is the name of the conv layers section on AlexNet and so we are freezing just that layer.
+for param in model.features.parameters()
+  param.requires_grad = False
+
+```
+
+- we can access the nth element of a layer by index with model.layername[i].in_features. We can then replace these features with another layer see below:
+
+```python
+import torch..nn as nn
+
+n_inputs =model.classifier[6].in_features
+last_new_layers = nn.Linear(n_inputs, len(classes))
+model.classifier[6] =   last_layer
+
+```
 
 ## Cool articles and resources:
 
 https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_convolutional_neuralnetwork/
 https://www.analyticsvidhya.com/blog/2018/10/understanding-inception-network-from-scratch/
+https://github.com/utkuozbulak/pytorch-custom-dataset-examples
