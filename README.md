@@ -1,12 +1,6 @@
 # **Computer Vision**
 
-This repo documents my journey from being a Data Scientist with basic knowledge of image data and cv techniques, to hopefully build up more expertise. I have some experience with images related projects and have studied Deep Learning through courses and literature over the last year and a half.
-
-On the 2nd of December 2019 I started this learning process. The progress will be:
-
-- Quickly review Andrew's Ng Convolutional Neural Networks chapter to put my self in the right mindset and vocabulary space. 
-- Complete PyTorch course (ideally with Computer Vision orientation). During the PyData Conference in London 2019, I had the opportunity to attend multiple presentations using PyTorch and found the framework very intuitive. This helped me decide to learn PyTorch as my main Deep Learning framework. 
-- Find a away to explore recent literature on the field and improve on the habit of reading more papers.
+This repo documents my journey from being a Data Scientist with basic knowledge of image data and computer vision techniques, to hopefully build up more expertise. I have some experience with images related projects and have studied Deep Learning through courses and literature over the last year and a half.
 
 ## Super summarised notes on Andrew's Ng Convolutional Neural Networks chapter:
 
@@ -360,7 +354,7 @@ transform_train = transforms.Compose([transforms.Resize((32,32)),
                                ])
 
 
-transform = transforms.Compose([transforms.Resize((32,32)),
+transform_test = transforms.Compose([transforms.Resize((32,32)),
                                transforms.ToTensor(),
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                                ])
@@ -399,3 +393,6 @@ model.classifier[6] =   last_layer
 https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_convolutional_neuralnetwork/
 https://www.analyticsvidhya.com/blog/2018/10/understanding-inception-network-from-scratch/
 https://github.com/utkuozbulak/pytorch-custom-dataset-examples
+https://jovianlin.io/pytorch-with-gpu-in-google-colab/
+https://github.com/pytorch/vision/blob/master/torchvision/models/detection/faster_rcnn.py
+https://www.learnopencv.com/faster-r-cnn-object-detection-with-pytorch/
